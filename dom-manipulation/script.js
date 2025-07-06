@@ -121,7 +121,7 @@ function createAddQuoteForm() {
   document.querySelector("h3")?.insertAdjacentElement("afterend", form);
 }
 
-// === Fetch quotes from server and sync ===
+// === Fetch quotes from server and merge ===
 async function fetchQuotesFromServer() {
   try {
     const response = await fetch('https://jsonplaceholder.typicode.com/posts');
@@ -134,7 +134,6 @@ async function fetchQuotesFromServer() {
 
     const localQuotes = JSON.parse(localStorage.getItem(STORAGE_KEY_QUOTES)) || [];
 
-    let conflictDetected = false;
     let newQuotes = [];
 
     serverQuotes.forEach(serverQuote => {
@@ -143,24 +142,44 @@ async function fetchQuotesFromServer() {
       );
       if (!match) {
         newQuotes.push(serverQuote);
-        conflictDetected = true;
       }
     });
 
-    if (conflictDetected) {
+    if (newQuotes.length > 0) {
       quotesArray.push(...newQuotes);
       saveQuotes();
       populateCategories();
-
       document.getElementById('syncStatus').textContent =
         `🔄 ${newQuotes.length} new quote(s) synced from server.`;
     } else {
       document.getElementById('syncStatus').textContent = `✅ Quotes are up to date with server.`;
     }
-
   } catch (error) {
-    console.error("Failed to fetch from server:", error);
-    document.getElementById('syncStatus').textContent = `❌ Server sync failed.`;
+    console.error("❌ Failed to fetch from server:", error);
+    document.getElementById('syncStatus').textContent = `❌ Server fetch failed.`;
+  }
+}
+
+// === Post local quotes to server ===
+async function postQuotesToServer() {
+  try {
+    const localQuotes = JSON.parse(localStorage.getItem(STORAGE_KEY_QUOTES)) || [];
+
+    const response = await fetch('https://jsonplaceholder.typicode.com/posts', {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(localQuotes)
+    });
+
+    if (response.ok) {
+      console.log("✅ Quotes successfully sent to server.");
+    } else {
+      console.error("❌ Failed to send quotes to server:", response.status);
+    }
+  } catch (error) {
+    console.error("❌ Error posting quotes:", error);
   }
 }
 
@@ -183,7 +202,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
   document.getElementById("newQuote").addEventListener("click", showRandomQuote);
 
-  // Start periodic syncing
-  fetchQuotesFromServer(); // Initial sync
+  // Two-way sync
+  fetchQuotesFromServer();     // Pull from server
+  postQuotesToServer();        // Push to server
   setInterval(fetchQuotesFromServer, 30000); // Sync every 30 seconds
 });
