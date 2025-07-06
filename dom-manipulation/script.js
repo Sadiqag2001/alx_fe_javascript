@@ -121,21 +121,23 @@ function createAddQuoteForm() {
   document.querySelector("h3")?.insertAdjacentElement("afterend", form);
 }
 
-// === Simulated server-side data ===
-let simulatedServerQuotes = [
-  { text: "Server says: Believe in yourself.", category: "Motivation" },
-  { text: "Server update: Every day is a new beginning.", category: "Inspiration" }
-];
+// === Fetch quotes from server and sync ===
+async function fetchQuotesFromServer() {
+  try {
+    const response = await fetch('https://jsonplaceholder.typicode.com/posts');
+    const data = await response.json();
 
-// === Main sync logic: fetch from server & resolve conflicts ===
-function fetchFromServerAndSync() {
-  setTimeout(() => {
+    const serverQuotes = data.slice(0, 5).map(post => ({
+      text: post.title,
+      category: "Server"
+    }));
+
     const localQuotes = JSON.parse(localStorage.getItem(STORAGE_KEY_QUOTES)) || [];
 
     let conflictDetected = false;
     let newQuotes = [];
 
-    simulatedServerQuotes.forEach(serverQuote => {
+    serverQuotes.forEach(serverQuote => {
       const match = localQuotes.find(local =>
         local.text === serverQuote.text && local.category === serverQuote.category
       );
@@ -155,12 +157,11 @@ function fetchFromServerAndSync() {
     } else {
       document.getElementById('syncStatus').textContent = `✅ Quotes are up to date with server.`;
     }
-  }, 1000); // Simulate latency
-}
 
-// === Add alias function for compatibility ===
-function fetchQuotesFromServer() {
-  fetchFromServerAndSync();
+  } catch (error) {
+    console.error("Failed to fetch from server:", error);
+    document.getElementById('syncStatus').textContent = `❌ Server sync failed.`;
+  }
 }
 
 // === Initialize on DOM ready ===
