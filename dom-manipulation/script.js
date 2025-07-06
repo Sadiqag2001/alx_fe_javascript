@@ -183,6 +183,19 @@ async function postQuotesToServer() {
   }
 }
 
+// === Master sync function with spinner ===
+async function syncQuotes() {
+  const spinner = document.getElementById('syncSpinner');
+  spinner.style.display = 'block';
+
+  try {
+    await fetchQuotesFromServer();
+    await postQuotesToServer();
+  } finally {
+    spinner.style.display = 'none';
+  }
+}
+
 // === Initialize on DOM ready ===
 document.addEventListener("DOMContentLoaded", () => {
   loadQuotes();
@@ -202,8 +215,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   document.getElementById("newQuote").addEventListener("click", showRandomQuote);
 
-  // Two-way sync
-  fetchQuotesFromServer();     // Pull from server
-  postQuotesToServer();        // Push to server
-  setInterval(fetchQuotesFromServer, 30000); // Sync every 30 seconds
+  // Two-way sync with loading spinner
+  syncQuotes(); // Initial sync
+  setInterval(syncQuotes, 30000); // Every 30 seconds
 });

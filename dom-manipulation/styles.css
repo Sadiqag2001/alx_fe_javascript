@@ -27,3 +27,14 @@ body {
     button:hover {
       background-color: #0056b3;
     }
+      #syncSpinner {
+    color: #007bff;
+    margin-top: 10px;
+    animation: spin 1s linear infinite;
+    display: inline-block;
+  }
+
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
