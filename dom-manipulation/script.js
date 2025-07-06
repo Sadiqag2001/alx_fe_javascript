@@ -3,7 +3,6 @@ const STORAGE_KEY_CATEGORY = "selected_category";
 
 let quotesArray = [];
 
-// === Load existing quotes or use default ===
 function loadQuotes() {
   const stored = localStorage.getItem(STORAGE_KEY_QUOTES);
   if (stored) {
@@ -20,22 +19,18 @@ function loadQuotes() {
   }
 }
 
-// === Save quotes to localStorage ===
 function saveQuotes() {
   localStorage.setItem(STORAGE_KEY_QUOTES, JSON.stringify(quotesArray));
 }
 
-// === Save selected category ===
 function saveSelectedCategory(category) {
   localStorage.setItem(STORAGE_KEY_CATEGORY, category);
 }
 
-// === Load saved category ===
 function loadSelectedCategory() {
   return localStorage.getItem(STORAGE_KEY_CATEGORY) || "all";
 }
 
-// === Populate categories from quotes ===
 function populateCategories() {
   const select = document.getElementById("categoryFilter");
   const selectedCategory = loadSelectedCategory();
@@ -51,7 +46,6 @@ function populateCategories() {
   });
 }
 
-// === Show a random quote from the selected category ===
 function showRandomQuote() {
   const category = document.getElementById("categoryFilter").value;
   let filtered = category === "all" ? quotesArray : quotesArray.filter(q => q.category === category);
@@ -70,14 +64,12 @@ function showRandomQuote() {
   sessionStorage.setItem("lastQuote", JSON.stringify(randomQuote));
 }
 
-// === Filter quotes (on category change) ===
 function filterQuotes() {
   const selected = document.getElementById("categoryFilter").value;
   saveSelectedCategory(selected);
   showRandomQuote();
 }
 
-// === Create the form for adding quotes ===
 function createAddQuoteForm() {
   const form = document.createElement("form");
 
@@ -121,7 +113,6 @@ function createAddQuoteForm() {
   document.querySelector("h3")?.insertAdjacentElement("afterend", form);
 }
 
-// === Fetch quotes from server and merge ===
 async function fetchQuotesFromServer() {
   try {
     const response = await fetch('https://jsonplaceholder.typicode.com/posts');
@@ -160,7 +151,6 @@ async function fetchQuotesFromServer() {
   }
 }
 
-// === Post local quotes to server ===
 async function postQuotesToServer() {
   try {
     const localQuotes = JSON.parse(localStorage.getItem(STORAGE_KEY_QUOTES)) || [];
@@ -183,7 +173,6 @@ async function postQuotesToServer() {
   }
 }
 
-// === Master sync function with spinner ===
 async function syncQuotes() {
   const spinner = document.getElementById('syncSpinner');
   spinner.style.display = 'block';
@@ -191,12 +180,12 @@ async function syncQuotes() {
   try {
     await fetchQuotesFromServer();
     await postQuotesToServer();
+    alert("Quotes synced with server!");
   } finally {
     spinner.style.display = 'none';
   }
 }
 
-// === Initialize on DOM ready ===
 document.addEventListener("DOMContentLoaded", () => {
   loadQuotes();
   populateCategories();
@@ -215,7 +204,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   document.getElementById("newQuote").addEventListener("click", showRandomQuote);
 
-  // Two-way sync with loading spinner
-  syncQuotes(); // Initial sync
-  setInterval(syncQuotes, 30000); // Every 30 seconds
+  syncQuotes(); 
+  setInterval(syncQuotes, 30000);
 });
