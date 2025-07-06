@@ -127,7 +127,7 @@ let simulatedServerQuotes = [
   { text: "Server update: Every day is a new beginning.", category: "Inspiration" }
 ];
 
-// === Fetch and sync with simulated server ===
+// === Main sync logic: fetch from server & resolve conflicts ===
 function fetchFromServerAndSync() {
   setTimeout(() => {
     const localQuotes = JSON.parse(localStorage.getItem(STORAGE_KEY_QUOTES)) || [];
@@ -158,6 +158,11 @@ function fetchFromServerAndSync() {
   }, 1000); // Simulate latency
 }
 
+// === Add alias function for compatibility ===
+function fetchQuotesFromServer() {
+  fetchFromServerAndSync();
+}
+
 // === Initialize on DOM ready ===
 document.addEventListener("DOMContentLoaded", () => {
   loadQuotes();
@@ -178,6 +183,6 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("newQuote").addEventListener("click", showRandomQuote);
 
   // Start periodic syncing
-  fetchFromServerAndSync(); // Initial sync
-  setInterval(fetchFromServerAndSync, 30000); // Sync every 30 sec
+  fetchQuotesFromServer(); // Initial sync
+  setInterval(fetchQuotesFromServer, 30000); // Sync every 30 seconds
 });
