@@ -16,6 +16,7 @@ function loadQuotes() {
       { text: "Success comes to those who are too busy to be looking for it.", category: "Success" },
       { text: "The only limit to our realization of tomorrow is our doubts of today.", category: "Inspiration" },
     ];
+    saveQuotes();
   }
 }
 
@@ -53,8 +54,8 @@ function populateCategories() {
 // === Show a random quote from the selected category ===
 function showRandomQuote() {
   const category = document.getElementById("categoryFilter").value;
-
   let filtered = category === "all" ? quotesArray : quotesArray.filter(q => q.category === category);
+
   if (filtered.length === 0) {
     document.getElementById("quoteDisplay").textContent = "No quotes found in this category.";
     return;
@@ -110,14 +111,51 @@ function createAddQuoteForm() {
 
     quotesArray.push(newQuote);
     saveQuotes();
-    populateCategories(); // Update dropdown with new category
+    populateCategories();
     showRandomQuote();
 
     quoteInput.value = "";
     categoryInput.value = "";
   });
 
-  document.querySelector("h3").insertAdjacentElement("afterend", form);
+  document.querySelector("h3")?.insertAdjacentElement("afterend", form);
+}
+
+// === Simulated server-side data ===
+let simulatedServerQuotes = [
+  { text: "Server says: Believe in yourself.", category: "Motivation" },
+  { text: "Server update: Every day is a new beginning.", category: "Inspiration" }
+];
+
+// === Fetch and sync with simulated server ===
+function fetchFromServerAndSync() {
+  setTimeout(() => {
+    const localQuotes = JSON.parse(localStorage.getItem(STORAGE_KEY_QUOTES)) || [];
+
+    let conflictDetected = false;
+    let newQuotes = [];
+
+    simulatedServerQuotes.forEach(serverQuote => {
+      const match = localQuotes.find(local =>
+        local.text === serverQuote.text && local.category === serverQuote.category
+      );
+      if (!match) {
+        newQuotes.push(serverQuote);
+        conflictDetected = true;
+      }
+    });
+
+    if (conflictDetected) {
+      quotesArray.push(...newQuotes);
+      saveQuotes();
+      populateCategories();
+
+      document.getElementById('syncStatus').textContent =
+        `🔄 ${newQuotes.length} new quote(s) synced from server.`;
+    } else {
+      document.getElementById('syncStatus').textContent = `✅ Quotes are up to date with server.`;
+    }
+  }, 1000); // Simulate latency
 }
 
 // === Initialize on DOM ready ===
@@ -138,49 +176,8 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   document.getElementById("newQuote").addEventListener("click", showRandomQuote);
+
+  // Start periodic syncing
+  fetchFromServerAndSync(); // Initial sync
+  setInterval(fetchFromServerAndSync, 30000); // Sync every 30 sec
 });
-
-const FAKE_SERVER_URL = 'https://example.com/quotes-api'; // placeholder
-
-// Simulated server-side data
-let simulatedServerQuotes = [
-  { text: "Server says: Believe in yourself.", category: "Motivation" },
-  { text: "Server update: Every day is a new beginning.", category: "Inspiration" }
-];
-
-function fetchFromServerAndSync() {
-  // Simulate delay and "server fetch"
-  setTimeout(() => {
-    const localQuotes = JSON.parse(localStorage.getItem(STORAGE_KEY_QUOTES)) || [];
-
-    let conflictDetected = false;
-    let newQuotes = [];
-
-    // Check for quotes on server that are not in local
-    simulatedServerQuotes.forEach(serverQuote => {
-      const match = localQuotes.find(local =>
-        local.text === serverQuote.text && local.category === serverQuote.category
-      );
-      if (!match) {
-        newQuotes.push(serverQuote);
-        conflictDetected = true;
-      }
-    });
-
-    // Conflict resolution: Server wins
-    if (newQuotes.length > 0) {
-      quotesArray.push(...newQuotes);
-      saveQuotes();
-      populateCategories();
-
-      // Inform user of update
-      document.getElementById('syncStatus').textContent =
-        `🔄 ${newQuotes.length} new quote(s) synced from server.`;
-    } else {
-      document.getElementById('syncStatus').textContent = `✅ Quotes are up to date with server.`;
-    }
-
-  }, 1000); // Simulate latency
-}
-// Auto-sync every 30 seconds
-setInterval(fetchFromServerAndSync, 30000);
